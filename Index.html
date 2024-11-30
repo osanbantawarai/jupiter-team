@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
+    <title>Tic Tac Toe</title>
     <style>
         body {
             display: flex;
@@ -15,89 +15,93 @@
             font-family: Arial, sans-serif;
         }
 
-        canvas {
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
             border: 1px solid black;
-            width: 100%;
-            max-width: 400px;
-            height: auto;
+            cursor: pointer;
+        }
+
+        .cell:hover {
+            background-color: #f0f0f0;
+        }
+
+        .message {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Snake Game</h1>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <h1>Tic Tac Toe</h1>
+    <div class="board" id="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+    <div class="message" id="message"></div>
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const board = document.getElementById('board');
+        const message = document.getElementById('message');
+        let cells = Array.from(document.getElementsByClassName('cell'));
+        let currentPlayer = 'X';
+        let gameState = Array(9).fill(null);
 
-        const gridSize = 20;
-        const tileCount = canvas.width / gridSize;
+        function handleClick(event) {
+            const index = event.target.getAttribute('data-index');
+            if (gameState[index] || checkWinner()) return;
 
-        let snake = [{ x: 10, y: 10 }];
-        let direction = { x: 0, y: 0 };
-        let food = { x: 15, y: 15 };
-        let score = 0;
+            gameState[index] = currentPlayer;
+            event.target.textContent = currentPlayer;
 
-        function gameLoop() {
-            update();
-            draw();
-            setTimeout(gameLoop, 100);
-        }
-
-        function update() {
-            const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
-
-            if (head.x === food.x && head.y === food.y) {
-                score++;
-                food = { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount) };
+            if (checkWinner()) {
+                message.textContent = `${currentPlayer} wins!`;
+            } else if (gameState.every(cell => cell)) {
+                message.textContent = `It's a draw!`;
             } else {
-                snake.pop();
-            }
-
-            snake.unshift(head);
-
-            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)) {
-                resetGame();
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
             }
         }
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function checkWinner() {
+            const winningCombinations = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8],
+                [0, 4, 8],
+                [2, 4, 6]
+            ];
 
-            ctx.fillStyle = 'green';
-            snake.forEach(segment => ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize));
-
-            ctx.fillStyle = 'red';
-            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
-
-            ctx.fillStyle = 'black';
-            ctx.fillText(`Score: ${score}`, 10, 10);
+            return winningCombinations.some(combination => {
+                const [a, b, c] = combination;
+                return gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c];
+            });
         }
 
-        function resetGame() {
-            snake = [{ x: 10, y: 10 }];
-            direction = { x: 0, y: 0 };
-            score = 0;
-        }
-
-        document.addEventListener('keydown', event => {
-            switch (event.key) {
-                case 'ArrowUp':
-                    if (direction.y === 0) direction = { x: 0, y: -1 };
-                    break;
-                case 'ArrowDown':
-                    if (direction.y === 0) direction = { x: 0, y: 1 };
-                    break;
-                case 'ArrowLeft':
-                    if (direction.x === 0) direction = { x: -1, y: 0 };
-                    break;
-                case 'ArrowRight':
-                    if (direction.x === 0) direction = { x: 1, y: 0 };
-                    break;
-            }
-        });
-
-        gameLoop();
+        cells.forEach(cell => cell.addEventListener('click', handleClick));
     </script>
 </body>
 </html>
